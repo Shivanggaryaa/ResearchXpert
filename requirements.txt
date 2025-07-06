@@ -1,0 +1,8 @@
+# ───── Smart‑Paper‑Explainer │ Python 3.13 ─────
+streamlit>=1.41.0          
+numpy>=2.3.0               
+PyMuPDF>=1.26.1            
+sentence-transformers>=4.1.0
+faiss-cpu>=1.11.0          
+requests>=2.31.0           
+python-dotenv>=1.0.1       
