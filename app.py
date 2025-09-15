@@ -1,32 +1,19 @@
 import os
-import fitz  # PyMuPDF
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 import shutil
-from dotenv import load_dotenv
+import fitz  # PyMuPDF
 
-# Load environment variables from .env if present
-load_dotenv()
-
-# Import your custom utils
-from text_utils import clean_text, chunk_text
-from embeddings_utils import embed_texts, build_faiss_index
-from qa_utils import answer_with_groq
-from scholar_utils import find_related_papers
-
-# Initialize Flask app
-app = Flask(__name__, template_folder="templates", static_folder="static")
-
-# ---- Global state (demo only, for session) ----
+# Global state (kept small)
 chunks = []
 index = None
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+app = Flask(__name__)
 
 # ---------------------- PDF Extraction ----------------------
 def extract_text_from_pdf(file_path: str) -> str:
-    """Extract all text from a PDF file path."""
     with fitz.open(file_path) as doc:
         return "\n".join(p.get_text("text") for p in doc)
 
@@ -34,13 +21,11 @@ def extract_text_from_pdf(file_path: str) -> str:
 # ---------------------- Routes ----------------------
 @app.route("/")
 def home():
-    """Serve frontend HTML (index.html)."""
     return render_template("index.html")
 
 
 @app.route("/upload", methods=["POST"])
 def upload_pdf():
-    """Handle PDF upload, extract text, chunk, and embed."""
     global chunks, index
 
     if "file" not in request.files:
@@ -55,16 +40,18 @@ def upload_pdf():
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
 
-        # Extract + clean + chunk
-        full_text = extract_text_from_pdf(filepath)
-        text = clean_text(full_text)
+        # Extract and process lazily
+        from text_utils import clean_text, chunk_text
+        from embeddings_utils import embed_texts, build_faiss_index
+
+        text = clean_text(extract_text_from_pdf(filepath))
         chunks = chunk_text(text)
 
-        # Embed + build FAISS index
+        # Build FAISS index
         vectors = embed_texts(chunks)
         index = build_faiss_index(vectors)
 
-        return jsonify({"status": "success", "filepath": filepath, "filename": filename})
+        return jsonify({"status": "success", "filename": filename})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -72,46 +59,37 @@ def upload_pdf():
 
 @app.route("/summarize", methods=["POST"])
 def summarize_pdf():
-    """Generate a summary and related papers."""
     global chunks, index
-
     if not chunks or not index:
         return jsonify({"error": "No document uploaded yet"}), 400
 
     try:
-        summary, _ = answer_with_groq(
-            "Summarize this paper.",
-            chunks,
-            index,
-            keywords=["SPGNN", "EfficientNet", "R-Plot32"]
-        )
-        related_papers = find_related_papers(summary)
-        return jsonify({"summary": summary, "related_papers": related_papers})
+        from qa_utils import answer_with_groq
+        from scholar_utils import find_related_papers
+
+        summary, _ = answer_with_groq("Summarize this paper.", chunks, index)
+        related = find_related_papers(summary)
+
+        return jsonify({"summary": summary, "related_papers": related})
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
 @app.route("/ask", methods=["POST"])
 def ask_question():
-    """Answer a user’s question about the uploaded paper."""
     global chunks, index
-
     if not chunks or not index:
         return jsonify({"error": "No document uploaded yet"}), 400
 
     data = request.get_json()
     question = data.get("question", "")
-
     if not question:
         return jsonify({"error": "No question provided"}), 400
 
     try:
-        answer, _ = answer_with_groq(
-            question,
-            chunks,
-            index,
-            keywords=["SPGNN", "EfficientNet", "R-Plot32"]
-        )
+        from qa_utils import answer_with_groq
+        answer, _ = answer_with_groq(question, chunks, index)
         return jsonify({"answer": answer})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -119,22 +97,16 @@ def ask_question():
 
 @app.route("/reset", methods=["POST"])
 def reset_site():
-    """Clear uploads folder and reset server-side state."""
     global chunks, index
+    chunks, index = [], None
 
-    chunks = []
-    index = None
-
-    # Delete all files in uploads folder
     for filename in os.listdir(UPLOAD_FOLDER):
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
         try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
+            path = os.path.join(UPLOAD_FOLDER, filename)
+            if os.path.isfile(path):
+                os.unlink(path)
         except Exception as e:
-            print(f"Failed to delete {file_path}. Reason: {e}")
+            print(f"Delete failed: {e}")
 
     return "Reset successful", 200
 
@@ -142,4 +114,4 @@ def reset_site():
 # ---------------------- Main ----------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port)
