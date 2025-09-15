@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResearchXpert</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <h1>📋ResearchXpert</h1>
+    <p class="subtitle">🚀Illuminate Research Documents with Conversational AI</p>
+    <button id="resetBtn" onclick="resetPage()"> ◻️Reset</button>
+
+  </header>
+
+  <main>
+    <!-- Top Section: Upload + Summary -->
+    <section class="top-panel">
+      <div class="top-content">
+        <!-- Left: Upload -->
+        <div class="upload-section">
+          <h2>Upload Research Paper</h2>
+          <div class="custom-file-upload">
+            <input type="file" id="pdfUpload" accept=".pdf" onchange="handleFileUpload()">
+            <label for="pdfUpload" class="browse-btn">🌐Browse</label>
+            <span id="fileName" class="file-name">No file selected</span>
+            <button id="viewBtn" class="view-btn" onclick="viewPDF()" disabled>🔗View Upload</button>
+          </div>
+          <button class="summarize-btn" onclick="summarizePDF()">Let's Summarize💫</button>
+        </div>
+
+        <!-- Right: Summary + Related Papers -->
+        <div class="summary-section">
+          <h3>📑 Summary</h3>
+          <div class="summary-box collapsed" id="summaryBox">
+            Transform Research Papers into Insightful Summaries Instantly...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Section: Q/A Chat -->
+    <section class="qa-container full-width">
+      <h2>📍Chat & Seek</h2>
+      <div class="display-area" id="chatBox">
+        <p> 🤖 Effortlessly Explore Your Research Papers Through Insightful Interactive Q&A !!</p>
+      </div>
+      <div class="input-area">
+        <input type="text" id="userQuestion" class="query-input" placeholder="Type your question...">
+        <button class="send-button" onclick="askQuestion()">Send</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 ResearchXpert | Built for Engineering Project</p>
+  </footer>
+
+  <!-- Enhanced JS -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

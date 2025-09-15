@@ -1,185 +1,144 @@
 import os
-import streamlit as st
 import fitz  # PyMuPDF
+from flask import Flask, render_template, request, jsonify
+from werkzeug.utils import secure_filename
+import shutil
 
+# Import your custom utils
 from text_utils import clean_text, chunk_text
 from embeddings_utils import embed_texts, build_faiss_index
-from qa_utils import answer_with_groq          # ← back to Groq
+from qa_utils import answer_with_groq
 from scholar_utils import find_related_papers
 
-st.set_page_config(page_title="Smart Research Paper Explainer", layout="wide")
+app = Flask(__name__)
 
-# ── Header & CSS ─────────────────────────────────────────────────────
-st.markdown(
-    """
-    <style>
-        .main-title { text-align: center; color:#1f77b4; margin-bottom:.2rem; }
-        .sub-title  { text-align: center; font-size:18px; margin-top:0; color:gray; }
-        .stTextInput>div>div>input { border-radius:8px; padding:8px; }
-    </style>
-    <h1 class='main-title'>📄 ResearchXpert </h1>
-    <p class='sub-title'>“Illuminate Research Documents with Conversational AI”</p>
-    <hr style='margin-top:0'>
-    """,
-    unsafe_allow_html=True,
-)
+# ---- Global state (demo only, for session) ----
+chunks = []
+index = None
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ── Sidebar ─────────────────────────────────────────────────────────
-st.sidebar.title("📚 Navigation")
-page = st.sidebar.selectbox("Go to:", ["🏠 Home – Upload & Chunk", "🔍 Query – Chat & Seek"])
-st.sidebar.markdown("---")
-st.sidebar.info("FAISS Index ✅" if "index" in st.session_state else "No index yet ❌")
 
-# ── PDF text extraction utility ─────────────────────────────────────
-def extract_text(file_bytes: bytes) -> str:
-    with fitz.open(stream=file_bytes, filetype="pdf") as doc:
+# ---------------------- PDF Extraction ----------------------
+def extract_text_from_pdf(file_path: str) -> str:
+    """Extract all text from a PDF file path."""
+    with fitz.open(file_path) as doc:
         return "\n".join(p.get_text("text") for p in doc)
 
-# ===================================================================
-# 🏠 HOME – upload / chunk / embed / summary / related
-# ===================================================================
-if page.startswith("🏠"):
-    st.header("📤 Upload & Process Research Paper")
 
-    # Clear / Reset buttons
-    clear_col, reset_col = st.columns(2)
-    if clear_col.button("🧹 Clear Output"):
-        for k in ("summary", "discover_results", "discover_query", "show_discovery"):
-            st.session_state.pop(k, None)
-    if reset_col.button("🔄 Full Reset"):
-        st.session_state.clear()
-        (st.rerun if hasattr(st, "rerun") else st.experimental_rerun)()
+# ---------------------- Routes ----------------------
+@app.route("/")
+def home():
+    """Serve frontend HTML (index.html)."""
+    return render_template("index.html")
 
-    # File uploader
-    uploaded = st.file_uploader("Upload PDF", type=["pdf"], label_visibility="collapsed")
-    if uploaded:
-        raw      = extract_text(uploaded.read())
-        cleaned  = clean_text(raw)
-        chunks   = chunk_text(cleaned, chunk_size=400, overlap=80)
-        st.success(f"✅ Extracted {len(raw):,} characters → {len(chunks)} chunks")
 
-        # Buttons row
-        col1, col2, col3 = st.columns(3)
-        build_bt = col1.button("⚙️ Build FAISS Index",  use_container_width=True)
-        sum_bt   = col2.button("📝 Summarize Paper",    use_container_width=True)
-        disc_bt  = col3.button("📖 Related Papers",     use_container_width=True)
+@app.route("/upload", methods=["POST"])
+def upload_pdf():
+    """Handle PDF upload, extract text, chunk, and embed."""
+    global chunks, index
 
-        # Build index
-        if build_bt:
-            with st.spinner("🔧 Building FAISS index…"):
-                idx = build_faiss_index(embed_texts(chunks))
-            st.session_state.update({"chunks": chunks, "index": idx})
-            st.success("✅ FAISS index built!")
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
-        # Summarize via Groq
-        if sum_bt:
-            if "index" not in st.session_state:
-                st.warning("⚠️ Build the index first.")
-            elif os.getenv("GROQ_API_KEY") is None:
-                st.warning("⚠️ GROQ_API_KEY not set.")
-            else:
-                with st.spinner("🤖 Summarizing with Groq…"):
-                    summary, _ = answer_with_groq(
-                        "Provide a concise summary of this paper.",
-                        st.session_state["chunks"],
-                        st.session_state["index"],
-                        k=3,
-                    )
-                    st.session_state["summary"] = summary
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No file selected"}), 400
 
-        if "summary" in st.session_state:
-            st.markdown("### 📄 Paper Summary")
-            st.info(st.session_state["summary"])
+    try:
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
 
-        # Related‑paper discovery
-        if disc_bt:
-            if "summary" not in st.session_state:
-                st.warning("⚠️ Generate a summary first.")
-            else:
-                st.session_state["show_discovery"] = True
-                st.session_state.pop("discover_results", None)
+        # Extract + clean + chunk
+        full_text = extract_text_from_pdf(filepath)
+        text = clean_text(full_text)
+        chunks = chunk_text(text)
 
-        if st.session_state.get("show_discovery"):
-            st.markdown("---")
-            st.markdown("### 🔍 Discover Related Papers")
+        # Embed + build FAISS index
+        vectors = embed_texts(chunks)
+        index = build_faiss_index(vectors)
 
-            def run_discovery():
-                query = st.session_state.get("discover_query", "").strip()
-                if not query:
-                    st.warning("⚠️ Enter a topic before searching.")
-                    return
-                with st.spinner("🔎 Searching Semantic Scholar…"):
-                    st.session_state["discover_results"] = find_related_papers(query, limit=5)
-                if not st.session_state["discover_results"]:
-                    st.warning("No related papers found.")
+        return jsonify({"status": "success", "filepath": filepath, "filename": filename})
 
-            st.text_input(
-                "Enter a concise research topic:",
-                key="discover_query",
-                placeholder="e.g. Mobile‑Assisted Language Learning",
-                on_change=run_discovery,
-            )
-            st.button("🔎 Search", on_click=run_discovery)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-            for p in st.session_state.get("discover_results", []):
-                st.markdown(
-                    f"**{p['title']}**  \n"
-                    f"*{p['authors']} – {p['year']}*  \n"
-                    f"[🔗 View Paper]({p['url']})"
-                )
-    else:
-        st.info("⬆️ Upload a PDF to begin.")
 
-# ===================================================================
-# 🔍 QUERY – Chat with Groq
-# ===================================================================
-elif page.startswith("🔍"):
-    st.header("💬 Let's Converse...")
+@app.route("/summarize", methods=["POST"])
+def summarize_pdf():
+    """Generate a summary and related papers."""
+    global chunks, index
 
-    # Guards
-    if "index" not in st.session_state:
-        st.warning("Build an index first in the Home tab.")
-        st.stop()
-    if os.getenv("GROQ_API_KEY") is None:
-        st.warning("GROQ_API_KEY not set.")
-        st.stop()
+    if not chunks or not index:
+        return jsonify({"error": "No document uploaded yet"}), 400
 
-    chat_hist = st.session_state.setdefault("chat_history", [])
+    try:
+        # Enhanced summary
+        summary, _ = answer_with_groq(
+            "Summarize this paper.",
+            chunks,
+            index,
+            keywords=["SPGNN", "EfficientNet", "R-Plot32"]
+        )
+        related_papers = find_related_papers(summary)
+        return jsonify({"summary": summary, "related_papers": related_papers})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    if st.button("🧹 Clear Chat"):
-        chat_hist.clear()
-        (st.rerun if hasattr(st, "rerun") else st.experimental_rerun)()
 
-    # Render history
-    for m in chat_hist:
-        with st.chat_message(m["role"]):
-            st.markdown(m["content"])
+@app.route("/ask", methods=["POST"])
+def ask_question():
+    """Answer a user’s question about the uploaded paper."""
+    global chunks, index
 
-    # New question
-    user_q = st.chat_input("Ask a question about this paper…")
-    if user_q:
-        chat_hist.append({"role": "user", "content": user_q})
-        with st.chat_message("user"):
-            st.markdown(user_q)
+    if not chunks or not index:
+        return jsonify({"error": "No document uploaded yet"}), 400
 
-        # Assistant response
-        with st.chat_message("assistant"):
-            with st.spinner("Groq is thinking…"):
-                try:
-                    answer, hits = answer_with_groq(
-                        user_q,
-                        st.session_state["chunks"],
-                        st.session_state["index"],
-                        k=3,
-                    )
-                except Exception as err:
-                    answer, hits = f"⚠️ Error: {err}", []
-            st.markdown(answer)
+    data = request.get_json()
+    question = data.get("question", "")
 
-            if hits:
-                with st.expander("🔍 Source Chunks"):
-                    for rk, (idx, score) in enumerate(hits, 1):
-                        st.markdown(f"**[{rk}] similarity {score:.3f}**")
-                        st.code(st.session_state["chunks"][idx][:1000] + "…")
+    if not question:
+        return jsonify({"error": "No question provided"}), 400
 
-        chat_hist.append({"role": "assistant", "content": answer})
+    try:
+        # Enhanced Q/A with structured, bullet-pointed response
+        answer, _ = answer_with_groq(
+            question,
+            chunks,
+            index,
+            keywords=["SPGNN", "EfficientNet", "R-Plot32"]
+        )
+        return jsonify({"answer": answer})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+
+@app.route("/reset", methods=["POST"])
+def reset_site():
+    """Clear uploads folder and reset server-side state."""
+    global chunks, index
+
+    # Clear in-memory variables
+    chunks = []
+    index = None
+
+    # Delete all files in uploads folder
+    upload_folder = "uploads"
+    for filename in os.listdir(upload_folder):
+        file_path = os.path.join(upload_folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(f"Failed to delete {file_path}. Reason: {e}")
+
+    return "Reset successful", 200
+
+
+# ---------------------- Main ----------------------
+if __name__ == "__main__":
+    app.run(debug=True)

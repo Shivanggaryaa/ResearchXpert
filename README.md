@@ -1,70 +1,143 @@
-# 📄 ResearchXpert – A Smart Research Paper Explainer & Summarizer
+📄 ResearchXpert
+================
 
-**Built with RAG + FAISS + Groq LLM + Streamlit**  
-*A project that transforms how you understand and interact with research papers.*
+**Illuminate Research Papers with Interactive Conversational AI**
 
----
+ResearchXpert is a web application that allows users to upload research papers (PDFs) and interact with them through AI-powered summarization and Q&A. The app extracts text from uploaded PDFs, generates embeddings, and uses a large language model (LLM) to provide detailed summaries and answer user queries.
 
-## 🚀 Project Overview
+🚀 Features
+-----------
 
-**ResearchXpert** is an intelligent, interactive web app designed to simplify the exploration of complex academic PDFs. It enables users to:
+### 📑 PDF Summarization
 
-- Upload a research paper,
-- Automatically extract, clean, and chunk the content,
-- Build semantic embeddings and perform vector search using FAISS,
-- Chat with the paper via Groq’s LLM,
-- Generate summaries with one click,
-- Discover related open-access papers via Semantic Scholar API.
+*   Upload research papers in PDF format.
+    
+*   Generate concise, high-quality summaries of the paper.
+    
+*   Supports long documents via chunking and embeddings.
+    
 
----
+### 💬 Chat n Seek (Q&A)
 
-## 🔍 Features
+*   Ask questions about the uploaded paper.
+    
+*   AI provides contextual answers based on the content.
+    
+*   Supports interactive exploration of research papers.
+    
 
-- **📤 Upload & Parse**  
-  Upload any research paper in PDF format and automatically extract text using PyMuPDF.
+### 🧰 Additional Features
 
-- **🧩 Chunking & Embedding**  
-  Clean and chunk the content into overlapping segments for better context awareness. Embeddings are generated via Sentence-Transformers.
+*   View uploaded PDF directly in the browser.
+    
+*   Reset/Refresh button to clear all uploads and chat history.
+    
+*   Clean, modern UI with collapsible summary boxes and chat bubbles.
+    
 
-- **⚙️ Vector Search with FAISS**  
-  Build a FAISS index to enable fast semantic retrieval of paper chunks.
+🎨 Frontend
+-----------
 
-- **📝 Smart Summarization**  
-  Instantly generate a concise paper summary using Groq’s high-performance `llama-3.1-8b-instant` model.
+*   HTML5 for structure
+    
+*   CSS3 with modern gradients, shadows, and hover effects
+    
+*   Vanilla JavaScript (ES6) for:
+    
+    *   File upload handling
+        
+    *   Summarization requests
+        
+    *   Q&A interaction
+        
+    *   Reset/Refresh functionality
+        
 
-- **💬 Chat-Based Q&A**  
-  Engage in a chat interface to ask questions about the paper. All answers are grounded using RAG (retrieval-augmented generation).
+🖥️ Backend
+-----------
 
-- **📖 Related Paper Discovery**  
-  Find topically related academic papers using the Semantic Scholar API based on the paper summary or a custom prompt.
+*   **Python 3.13**
+    
+*   **Flask** for routing and serving frontend
+    
+*   **PyMuPDF (fitz)** for PDF text extraction
+    
+*   **FAISS** for storing and searching text embeddings
+    
+*   **Groq LLM API** for summarization and Q&A
+    
 
-- **🔄 Clear & Reset Options**  
-  Easily clear outputs or reset the full session to start fresh.
+⚙️ Project Structure
+--------------------
 
----
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   smart-paper-explainer/  │  ├── app.py                  # Flask backend with routes  ├── embeddings_utils.py      # Text embedding and FAISS index functions  ├── qa_utils.py              # Groq API integration for summarization & Q/A  ├── text_utils.py            # Text cleaning and chunking  ├── static/  │   ├── style.css            # Frontend CSS  │   └── script.js            # Frontend JS  ├── templates/  │   └── index.html           # Frontend HTML  ├── uploads/                 # Temporary storage for uploaded PDFs  ├── requirements.txt         # Python dependencies  └── README.md                # Project documentation   `
 
-## 🛠️ Tech Stack
+💻 Setup Instructions
+---------------------
 
-| Component             | Technology                                 |
-|----------------------|---------------------------------------------|
-| Frontend & UI        | [Streamlit](https://streamlit.io)           |
-| PDF Parsing          | [PyMuPDF](https://pymupdf.readthedocs.io)   |
-| Embedding Model      | `sentence-transformers/all-MiniLM-L6-v2`    |
-| Vector Indexing      | [FAISS](https://github.com/facebookresearch/faiss) |
-| LLM Integration      | [Groq API](https://console.groq.com) using `llama-3.1-8b-instant` |
-| Paper Search API     | [Semantic Scholar API](https://api.semanticscholar.org) |
-| Environment Mgmt     | `.env` (for API keys) + `python-dotenv`     |
+1.  **Clone the repository**
+    
 
----
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   git clone https://github.com/Shivanggaryaa/smart-paper-explainer.git  cd smart-paper-explainer   `
 
-## 📁 Project Structure
+1.  **Create a virtual environment**
+    
 
-smart-paper-explainer/
-│
-├── app.py # Main Streamlit application
-├── qa_utils.py # Q&A + summarization logic via Groq
-├── text_utils.py # PDF cleaning and text chunking
-├── embeddings_utils.py # Embedding + FAISS index/search
-├── scholar_utils.py # Semantic Scholar API integration
-├── requirements.txt # Dependency list
-└── .env # API keys (Groq, Semantic Scholar
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   python -m venv venv  source venv/bin/activate   # Linux/Mac  venv\Scripts\activate      # Windows   `
+
+1.  **Install dependencies**
+    
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   pip install -r requirements.txt   `
+
+1.  **Configure environment variables**
+    
+
+*   Create a .env file in the root directory:
+    
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   GROQ_API_KEY=your_groq_api_key   `
+
+1.  **Run the Flask app**
+    
+
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   python app.py   `
+
+🔧 Usage
+--------
+
+1.  Upload a research paper (PDF) via the **Upload** section.
+    
+2.  Click **Summarize** to generate a concise summary.
+    
+3.  Ask questions in the **Chat n Seek** section.
+    
+4.  Use the **Reset/Refresh** button to clear all uploads and start fresh.
+    
+
+🛠️ Tech Stack
+--------------
+
+*   **Frontend:** HTML5, CSS3, JavaScript (ES6)
+    
+*   **Backend:** Python, Flask
+    
+*   **PDF Processing:** PyMuPDF
+    
+*   **Embeddings & Search:** FAISS
+    
+*   **LLM API:** Groq API (LLaMA 3.1)
+    
+
+📌 Future Improvements
+----------------------
+
+*   Add user authentication for saving sessions.
+    
+*   Persistent storage for uploaded PDFs and summaries.
+    
+*   Enhanced UI/UX for mobile responsiveness.
+    
+*   Better handling for very large PDFs.
+    
+*   Multiple LLM backends for summarization and Q&A.
