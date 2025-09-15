@@ -1,40 +1,27 @@
-# # ───── Smart-Paper-Explainer │ Python 3.13 ─────
+# ───── Smart-Paper-Explainer │ Python 3.13 ─────
 
-# # Web backend
-# flask>=2.2.0            
+# Web backend
+flask>=2.2.0            
 
-# # PDF text extraction
-# PyMuPDF>=1.26.1          
+# PDF text extraction
+PyMuPDF>=1.26.1          
 
-# # Numerical computing & embeddings
-# numpy>=2.3.0             
-# sentence-transformers>=4.1.0
+# Numerical computing & embeddings
+numpy>=2.3.0             
+sentence-transformers>=4.1.0
 
-# # Vector search for embeddings
-# faiss-cpu>=1.11.0        
+# Vector search for embeddings
+faiss-cpu>=1.11.0        
 
-# # HTTP requests for Groq API
-# requests>=2.31.0         
+# HTTP requests for Groq API
+requests>=2.31.0         
 
-# # Environment variable management
-# python-dotenv>=1.0.1     
+# Environment variable management
+python-dotenv>=1.0.1     
 
-# #render deployment
-# gunicorn
+#render deployment
+gunicorn
 
 
 
-# Core web server
-flask==3.1.2
-gunicorn==23.0.0
 
-# PDF handling
-PyMuPDF==1.26.4
-
-# Text + embeddings
-sentence-transformers==2.7.0   # uses MiniLM by default (lightweight)
-faiss-cpu==1.12.0
-
-# Utils
-python-dotenv==1.0.1
-requests==2.32.3
