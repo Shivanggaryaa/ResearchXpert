@@ -70,7 +70,22 @@ ResearchXpert is a web application that allows users to upload research papers (
 ⚙️ Project Structure
 --------------------
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   smart-paper-explainer/  │  ├── app.py                  # Flask backend with routes  ├── embeddings_utils.py      # Text embedding and FAISS index functions  ├── qa_utils.py              # Groq API integration for summarization & Q/A  ├── text_utils.py            # Text cleaning and chunking  ├── static/  │   ├── style.css            # Frontend CSS  │   └── script.js            # Frontend JS  ├── templates/  │   └── index.html           # Frontend HTML  ├── uploads/                 # Temporary storage for uploaded PDFs  ├── requirements.txt         # Python dependencies  └── README.md                # Project documentation   `
+    smart-paper-explainer/
+    │
+    ├── app.py                  # Flask backend with routes
+    ├── embeddings_utils.py      # Text embedding and FAISS index functions
+    ├── qa_utils.py              # Groq API integration for summarization & Q/A
+    ├── text_utils.py            # Text cleaning and chunking
+    ├── static/
+    │   ├── style.css            # Frontend CSS
+    │   └── script.js            # Frontend JS
+    ├── templates/
+    │   └── index.html           # Frontend HTML
+    ├── uploads/                 # Temporary storage for uploaded PDFs
+    ├── requirements.txt         # Python dependencies
+    └── README.md                # Project documentation
+
+`
 
 💻 Setup Instructions
 ---------------------
@@ -81,9 +96,10 @@ Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQL
 
 1.  **Create a virtual environment**
     
-      python -m venv venv 
-      source venv/bin/activate   # Linux/Mac  
-      venv\Scripts\activate      # Windows   `
+      python -m venv venv
+    
+      source venv/bin/activate           # Linux/Mac  
+      venv\Scripts\activate              # Windows   `
 
 1.  **Install dependencies**
 
@@ -138,3 +154,6 @@ Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQL
 *   Better handling for very large PDFs.
     
 *   Multiple LLM backends for summarization and Q&A.
+
+
+🔖 Live Demo :   
