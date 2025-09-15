@@ -3,6 +3,10 @@ import fitz  # PyMuPDF
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 import shutil
+from dotenv import load_dotenv
+
+# Load environment variables from .env if present
+load_dotenv()
 
 # Import your custom utils
 from text_utils import clean_text, chunk_text
@@ -10,7 +14,8 @@ from embeddings_utils import embed_texts, build_faiss_index
 from qa_utils import answer_with_groq
 from scholar_utils import find_related_papers
 
-app = Flask(__name__)
+# Initialize Flask app
+app = Flask(__name__, template_folder="templates", static_folder="static")
 
 # ---- Global state (demo only, for session) ----
 chunks = []
@@ -74,7 +79,6 @@ def summarize_pdf():
         return jsonify({"error": "No document uploaded yet"}), 400
 
     try:
-        # Enhanced summary
         summary, _ = answer_with_groq(
             "Summarize this paper.",
             chunks,
@@ -102,7 +106,6 @@ def ask_question():
         return jsonify({"error": "No question provided"}), 400
 
     try:
-        # Enhanced Q/A with structured, bullet-pointed response
         answer, _ = answer_with_groq(
             question,
             chunks,
@@ -112,7 +115,6 @@ def ask_question():
         return jsonify({"answer": answer})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
 
 
 @app.route("/reset", methods=["POST"])
@@ -120,14 +122,12 @@ def reset_site():
     """Clear uploads folder and reset server-side state."""
     global chunks, index
 
-    # Clear in-memory variables
     chunks = []
     index = None
 
     # Delete all files in uploads folder
-    upload_folder = "uploads"
-    for filename in os.listdir(upload_folder):
-        file_path = os.path.join(upload_folder, filename)
+    for filename in os.listdir(UPLOAD_FOLDER):
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
         try:
             if os.path.isfile(file_path) or os.path.islink(file_path):
                 os.unlink(file_path)
@@ -141,4 +141,5 @@ def reset_site():
 
 # ---------------------- Main ----------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
