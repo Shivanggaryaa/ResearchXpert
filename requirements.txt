@@ -1,22 +1,17 @@
-# ───── Smart-Paper-Explainer │ Python 3.11 ─────
-
 # Web backend
-flask==3.1.2
+flask==2.3.2
 
 # PDF text extraction
-PyMuPDF==1.23.25
+PyMuPDF==1.26.4
 
 # Numerical computing & embeddings
 numpy==1.26.4
 sentence-transformers==2.2.2
 
-# HuggingFace hub (fix cached_download error)
-huggingface_hub==0.13.4
+# Vector search for embeddings
+faiss-cpu==1.11.0
 
-# Vector search
-faiss-cpu==1.7.4
-
-# HTTP requests
+# HTTP requests for Groq API
 requests==2.32.3
 
 # Environment variable management
