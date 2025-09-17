@@ -156,4 +156,6 @@ ResearchXpert is a web application that allows users to upload research papers (
 *   Multiple LLM backends for summarization and Q&A.
 
 
-🔖 Live Demo :   
+
+
+🔖 Live Demo :   https://huggingface.co/spaces/ShivangArya/rshxpt
