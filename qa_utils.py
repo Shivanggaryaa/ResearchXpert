@@ -71,7 +71,6 @@ def answer_with_groq(
 
     system_msg = """
 You are an AI research assistant. Answer questions about ONE research paper using ONLY the provided excerpts.
-
 Instructions:
 - Use concise bullet points.
 - Merge duplicate points.

@@ -39,18 +39,27 @@ async function summarizePDF() {
   summaryBox.innerHTML = "⏳ Uploading & summarizing... please wait.";
 
   try {
+    // --- Upload PDF ---
     const uploadRes = await fetch("/upload", { method: "POST", body: formData });
-    if (!uploadRes.ok) throw new Error("File upload failed");
-    await uploadRes.json();
+    const uploadData = await uploadRes.json();
 
+    if (!uploadRes.ok || uploadData.error) {
+      throw new Error(uploadData.error || "File upload failed");
+    }
+
+    // --- Summarize PDF ---
     const summarizeRes = await fetch("/summarize", { method: "POST" });
-    if (!summarizeRes.ok) throw new Error("Summarization failed");
+    const summarizeData = await summarizeRes.json();
 
-    const data = await summarizeRes.json();
-    summaryBox.innerHTML = renderMarkdown(data.summary || "⚠️ No summary generated.");
+    if (!summarizeRes.ok || summarizeData.error) {
+      throw new Error(summarizeData.error || "Summarization failed");
+    }
+
+    summaryBox.innerHTML = renderMarkdown(summarizeData.summary || "⚠️ No summary generated.");
+
   } catch (error) {
     console.error(error);
-    summaryBox.innerHTML = "❌ Error during upload/summarization.";
+    summaryBox.innerHTML = `❌ Error during upload/summarization: ${error.message}`;
   }
 }
 
@@ -80,9 +89,11 @@ async function askQuestion() {
     });
 
     const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
     botTyping.innerHTML = `<strong>Bot:</strong> ${renderMarkdown(data.answer || "⚠️ No answer returned.")}`;
   } catch (error) {
-    botTyping.innerHTML = `<strong>Bot:</strong> ❌ Error getting response.`;
+    botTyping.innerHTML = `<strong>Bot:</strong> ❌ Error getting response: ${error.message}`;
     console.error(error);
   }
 
@@ -92,10 +103,7 @@ async function askQuestion() {
 
 // ------------------- Simple Markdown Renderer -------------------
 function renderMarkdown(text) {
-  // Bold **term**
   let html = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-
-  // Split lines
   const lines = html.split("\n");
   let listItems = [];
   let otherLines = [];
@@ -103,7 +111,6 @@ function renderMarkdown(text) {
   lines.forEach(line => {
     line = line.trim();
     if (/^\d+\./.test(line)) { 
-      // Numbered contribution
       listItems.push(`<li>${line}</li>`);
     } else if (line.startsWith("• ") || line.startsWith("- ")) {
       listItems.push(`<li>${line.slice(2)}</li>`);
@@ -116,20 +123,15 @@ function renderMarkdown(text) {
   return listHTML + otherLines.join("");
 }
 
+// ------------------- Reset Site -------------------
 function resetPage() {
   fetch("/reset", { method: "POST" })
     .then(res => {
-      if (res.ok) {
-        // Reload page after server-side reset
-        window.location.reload();
-      } else {
-        alert("Failed to reset site. Try again.");
-      }
+      if (res.ok) window.location.reload();
+      else alert("Failed to reset site. Try again.");
     })
     .catch(err => {
       console.error(err);
       alert("Error resetting site.");
     });
 }
-
-

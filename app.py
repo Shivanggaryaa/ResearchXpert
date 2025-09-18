@@ -1,4 +1,9 @@
 import os
+# Force Hugging Face cache to a writable directory
+os.environ["TRANSFORMERS_CACHE"] = "/app/cache"
+os.environ["HF_HOME"] = "/app/cache"
+os.makedirs("/app/cache", exist_ok=True)
+
 import fitz  # PyMuPDF
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
@@ -17,12 +22,14 @@ from scholar_utils import find_related_papers
 # Initialize Flask app
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
+
+
+import tempfile
 # ---- Global state (demo only, for session) ----
 chunks = []
 index = None
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 
 # ---------------------- PDF Extraction ----------------------
 def extract_text_from_pdf(file_path: str) -> str:

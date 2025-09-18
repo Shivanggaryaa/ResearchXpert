@@ -1,4 +1,3 @@
-
 """
 Utility helpers for cleaning raw PDF text and splitting it into
 overlapping chunks that are ready for vector embeddings.
@@ -27,4 +26,3 @@ def chunk_text(text: str, chunk_size: int = 400, overlap: int = 80) -> List[str]
         start += chunk_size - overlap
 
     return chunks
-

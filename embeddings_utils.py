@@ -1,9 +1,18 @@
 from typing import List, Tuple
 import numpy as np
 import faiss
+import os
 from sentence_transformers import SentenceTransformer
 
-_model = SentenceTransformer("all-MiniLM-L6-v2")
+# Ensure cache folder exists and is writable
+cache_dir = os.environ.get("TRANSFORMERS_CACHE", "./cache")
+os.makedirs(cache_dir, exist_ok=True)
+
+# Load the model with cache_folder explicitly
+_model = SentenceTransformer(
+    "all-MiniLM-L6-v2",
+    cache_folder=cache_dir
+)
 
 def embed_texts(chunks: List[str]) -> np.ndarray:
     emb = _model.encode(chunks, show_progress_bar=False, convert_to_numpy=True)
@@ -20,3 +29,5 @@ def get_top_k(query: str, chunks: List[str], index: faiss.IndexFlatIP, k: int = 
     faiss.normalize_L2(q_emb)
     scores, ids = index.search(q_emb, k)
     return [(int(idx), float(score)) for idx, score in zip(ids[0], scores[0]) if idx != -1]
+
+
